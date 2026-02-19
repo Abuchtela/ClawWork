@@ -287,7 +287,7 @@ Every agent response ends with this line, providing transparent economic feedbac
 - Costs accumulate during the task session
 
 **With TaskClassifier:**
-- Classification happens asynchronously before task assignment
+- Classification is performed using an async call before task assignment
 - Uses the same tracked provider → classification cost is included in task cost
 - Falls back gracefully if occupation mapping file missing or classification fails
 
