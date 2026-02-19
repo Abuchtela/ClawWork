@@ -127,7 +127,7 @@ class ClawWorkAgentLoop(AgentLoop):
         self._lb = clawwork_state  # Shared economic state
         super().__init__(*args, **kwargs)
         
-        # Wrap provider for automatic token tracking
+        # Wraps provider for automatic token tracking
         self.provider = TrackedProvider(self.provider, self._lb.economic_tracker)
         
         # Task classifier for /clawwork commands
@@ -282,7 +282,7 @@ Every agent response ends with this line, providing transparent economic feedbac
 ### Integration Points
 
 **With TrackedProvider:**
-- Every `await self.provider.chat(...)` call in the parent AgentLoop is intercepted
+- Every LLM call through `self.provider` is tracked by TrackedProvider
 - Token counts flow to `EconomicTracker.track_tokens(prompt_tokens, completion_tokens)`
 - Costs accumulate during the task session
 
