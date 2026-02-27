@@ -237,6 +237,62 @@ cp .env.example .env
 
 ---
 
+## 💸 PayPal Auto-Withdrawal
+
+ClawWork can automatically send real PayPal Payouts once per hour whenever the agent's accumulated work income exceeds a configurable threshold.
+
+### How it works
+
+1. Every qualifying work payment (evaluation score ≥ threshold) is added to an internal `payout_eligible_balance`.
+2. After each payment, `maybe_trigger_payout()` checks:
+   - `PAYPAL_PAYOUTS_ENABLED=true` is set.
+   - `payout_eligible_balance > PAYPAL_PAYOUT_THRESHOLD_USD` (default $50).
+   - At least `PAYPAL_PAYOUT_MIN_INTERVAL_SECONDS` (default 3600s / 1 hour) have elapsed since the last payout.
+3. If all conditions are met, a PayPal Payouts batch is submitted via the REST API.
+4. The payout state and full ledger are persisted to:
+   - `livebench/data/agent_data/<signature>/economic/payout_state.json`
+   - `livebench/data/agent_data/<signature>/economic/payouts.jsonl`
+
+### Enabling payouts
+
+```bash
+# 1. Copy example env file
+cp .env.example .env
+
+# 2. Add your PayPal credentials and enable payouts
+PAYPAL_PAYOUTS_ENABLED=true
+PAYPAL_CLIENT_ID=your-live-paypal-client-id
+PAYPAL_CLIENT_SECRET=your-live-paypal-client-secret
+PAYPAL_PAYOUT_RECEIVER_EMAIL=abuchtela90@gmail.com
+
+# Optional overrides (these are the defaults)
+PAYPAL_ENV=live                         # or "sandbox" for testing
+PAYPAL_PAYOUT_THRESHOLD_USD=50          # trigger when balance exceeds $50
+PAYPAL_PAYOUT_MIN_INTERVAL_SECONDS=3600 # no more than once per hour
+```
+
+### Testing without real money
+
+```bash
+PAYPAL_PAYOUTS_ENABLED=true
+PAYPAL_PAYOUTS_DRY_RUN=true   # logs what would be paid — no real PayPal call
+```
+
+Run the payout test suite:
+
+```bash
+python scripts/test_paypal_payouts.py
+```
+
+### Safety notes
+
+- **Default disabled**: payouts are off unless `PAYPAL_PAYOUTS_ENABLED=true` is explicitly set.
+- **Idempotency**: the `sender_batch_id` is derived from the agent signature + UTC hour window, so the same hour is never paid twice — even across crashes or restarts.
+- **Failure handling**: if the PayPal API returns an error, the balance and last-payout timestamp are *not* reset, so the next hourly window will retry.
+- **Secrets**: never commit `.env`. Only `.env.example` (with placeholder values) is tracked in git.
+
+---
+
 ## 📊 GDPVal Benchmark Dataset
 
 ClawWork uses the **[GDPVal](https://openai.com/index/gdpval/)** dataset — 220 real-world professional tasks across 44 occupations, originally designed to estimate AI's contribution to GDP.
