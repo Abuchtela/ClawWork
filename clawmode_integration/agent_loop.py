@@ -24,7 +24,7 @@ from nanobot.bus.queue import MessageBus
 from nanobot.providers.base import LLMProvider
 from nanobot.session.manager import SessionManager
 
-from clawmode_integration.provider_wrapper import CostCapturingLiteLLMProvider, TrackedProvider
+from clawmode_integration.provider_wrapper import TrackedProvider
 from clawmode_integration.task_classifier import TaskClassifier
 from clawmode_integration.tools import (
     ClawWorkState,
@@ -33,7 +33,6 @@ from clawmode_integration.tools import (
     LearnTool,
     GetStatusTool,
 )
-from clawmode_integration.artifact_tools import CreateArtifactTool, ReadArtifactTool
 
 _CLAWWORK_USAGE = (
     "Usage: `/clawwork <instruction>`\n\n"
@@ -55,13 +54,6 @@ class ClawWorkAgentLoop(AgentLoop):
         self._lb = clawwork_state
         super().__init__(*args, **kwargs)
 
-        # Upgrade LiteLLMProvider to our cost-capturing subclass so that
-        # OpenRouter's reported cost flows through to EconomicTracker.
-        # Class mutation avoids recreating the provider with unknown kwargs.
-        from nanobot.providers.litellm_provider import LiteLLMProvider
-        if type(self.provider) is LiteLLMProvider:
-            self.provider.__class__ = CostCapturingLiteLLMProvider
-
         # Wrap the provider for automatic token cost tracking.
         # Must happen *after* super().__init__() which stores self.provider.
         self.provider = TrackedProvider(self.provider, self._lb.economic_tracker)
@@ -74,25 +66,19 @@ class ClawWorkAgentLoop(AgentLoop):
     # ------------------------------------------------------------------
 
     def _register_default_tools(self) -> None:
-        """Register all nanobot tools plus ClawWork tools."""
+        """Register all nanobot tools plus the 4 ClawWork tools."""
         super()._register_default_tools()
         self.tools.register(DecideActivityTool(self._lb))
         self.tools.register(SubmitWorkTool(self._lb))
         self.tools.register(LearnTool(self._lb))
         self.tools.register(GetStatusTool(self._lb))
-        self.tools.register(CreateArtifactTool(self._lb))
-        if self._lb.enable_file_reading:
-            self.tools.register(ReadArtifactTool(self._lb))
 
     # ------------------------------------------------------------------
     # Message processing with economic bookkeeping
     # ------------------------------------------------------------------
 
     async def _process_message(
-        self,
-        msg: InboundMessage,
-        session_key: str | None = None,
-        on_progress=None,
+        self, msg: InboundMessage, session_key: str | None = None, on_progress: Any = None,
     ) -> OutboundMessage | None:
         """Wrap super()'s processing with start_task / end_task.
 
@@ -102,7 +88,7 @@ class ClawWorkAgentLoop(AgentLoop):
         # Check for /clawwork command
         content = (msg.content or "").strip()
         if content.lower().startswith("/clawwork"):
-            return await self._handle_clawwork(msg, content, session_key=session_key)
+            return await self._handle_clawwork(msg, content, session_key=session_key, on_progress=on_progress)
 
         # Regular message — standard economic tracking
         ts = msg.timestamp.strftime("%Y%m%d_%H%M%S")
@@ -113,9 +99,7 @@ class ClawWorkAgentLoop(AgentLoop):
         tracker.start_task(task_id, date=date_str)
 
         try:
-            response = await super()._process_message(
-                msg, session_key=session_key, on_progress=on_progress
-            )
+            response = await super()._process_message(msg, session_key=session_key, on_progress=on_progress)
 
             # Append a cost summary line to the response content
             if response and response.content and tracker.current_task_id:
@@ -139,11 +123,7 @@ class ClawWorkAgentLoop(AgentLoop):
     # ------------------------------------------------------------------
 
     async def _handle_clawwork(
-        self,
-        msg: InboundMessage,
-        content: str,
-        session_key: str | None = None,
-        on_progress=None,
+        self, msg: InboundMessage, content: str, session_key: str | None = None, on_progress: Any = None,
     ) -> OutboundMessage | None:
         """Parse /clawwork <instruction>, classify, assign task, run agent."""
         # Extract instruction after "/clawwork"
@@ -224,9 +204,7 @@ class ClawWorkAgentLoop(AgentLoop):
         tracker.start_task(task_id, date=date_str)
 
         try:
-            response = await super()._process_message(
-                rewritten, session_key=session_key, on_progress=on_progress
-            )
+            response = await super()._process_message(rewritten, session_key=session_key, on_progress=on_progress)
 
             if response and response.content and tracker.current_task_id:
                 cost_line = self._format_cost_line()
