@@ -607,5 +607,5 @@ PRs and issues welcome! The codebase is clean and modular. Key extension points:
   <img src="https://visitor-badge.laobi.icu/badge?page_id=HKUDS.ClawWork&style=for-the-badge&color=00d4ff" alt="Views">
 </p>
 
-<!-- bc_hi2cipof -->
+<!-- Coinbase OnchainKit Project ID: bc_hi2cipof -->
 
