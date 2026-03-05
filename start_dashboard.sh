@@ -5,9 +5,11 @@
 
 set -e
 
-# Activate conda environment
-eval "$(conda shell.bash hook)"
-conda activate base
+# Activate conda environment if available (optional)
+if command -v conda &> /dev/null; then
+    eval "$(conda shell.bash hook)" 2>/dev/null || true
+    conda activate base 2>/dev/null || true
+fi
 
 echo "🚀 Starting LiveBench Dashboard..."
 echo ""
