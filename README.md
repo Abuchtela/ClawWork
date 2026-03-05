@@ -141,9 +141,12 @@ nanobot gateway
 
 ### Mode 1: Standalone Simulation
 
-Get up and running in 3 commands:
+Get up and running in 4 commands:
 
 ```bash
+# First time only — install Python and Node.js dependencies
+./setup.sh
+
 # Terminal 1 — start the dashboard (backend API + React frontend)
 ./start_dashboard.sh
 
