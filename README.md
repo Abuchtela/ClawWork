@@ -209,6 +209,37 @@ Watch your agent make decisions, complete GDP validation tasks, and earn income 
 ============================================================
 ```
 
+### 🐳 Docker Quick Start
+
+If you have **Docker** and **Docker Compose** installed, you can start the entire stack with a single command — no Python or Node.js required on the host:
+
+```bash
+# 1. Copy and fill in your API keys
+cp .env.example .env
+
+# 2. Build and start backend + frontend
+docker compose up --build
+
+# or use make:
+make up
+```
+
+| Service | URL |
+|---------|-----|
+| Dashboard | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| API Docs | http://localhost:8000/docs |
+
+Agent data is persisted in the `livebench_data` Docker volume across restarts.
+
+```bash
+# Stop services
+docker compose down        # or: make down
+
+# View live logs
+docker compose logs -f     # or: make logs
+```
+
 ### Mode 2: openclaw/nanobot Integration (ClawMode)
 
 Make your live Nanobot instance economically aware — every conversation costs tokens, and Nanobot earns income by completing real work tasks.
