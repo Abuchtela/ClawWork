@@ -10,7 +10,7 @@
 #   make build          Build Docker image
 #   make clean          Remove build artifacts and logs
 
-.PHONY: setup start stop run logs logs-backend logs-frontend build build-frontend up up-detach down clean clean-all help
+.PHONY: setup start run
 
 # ── Convenience shortcuts ──────────────────────────────────────────────────────
 
@@ -27,6 +27,8 @@ run:
 	@bash run_test_agent.sh
 
 # ── Docker Compose ─────────────────────────────────────────────────────────────
+
+.PHONY: up up-detach down stop logs logs-backend logs-frontend
 
 ## up: Build and start all services with Docker Compose
 up:
@@ -58,6 +60,8 @@ logs-frontend:
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 
+.PHONY: build build-frontend
+
 ## build: Build the Docker image
 build:
 	docker compose build
@@ -68,6 +72,8 @@ build-frontend:
 
 # ── Cleanup ────────────────────────────────────────────────────────────────────
 
+.PHONY: clean clean-all
+
 ## clean: Remove logs, frontend build artifacts
 clean:
 	rm -rf logs/ frontend/dist/
@@ -77,6 +83,8 @@ clean-all: clean
 	rm -rf frontend/node_modules/
 
 # ── Help ───────────────────────────────────────────────────────────────────────
+
+.PHONY: help
 
 ## help: Display this help message
 help:
