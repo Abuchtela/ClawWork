@@ -9,6 +9,12 @@ const buildBasePath = normalizedBasePath.endsWith('/')
   ? normalizedBasePath
   : `${normalizedBasePath}/`
 
+// Allow the proxy target to be overridden via BACKEND_URL so the Vite dev
+// server can reach the API when running inside Docker Compose (where the
+// backend is accessible as http://backend:8000, not http://localhost:8000).
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+const backendWsUrl = backendUrl.replace(/^http/, 'ws')
+
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: [react()],
@@ -17,11 +23,11 @@ export default defineConfig(({ command }) => ({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: backendUrl,
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: backendWsUrl,
         ws: true,
       },
     },
