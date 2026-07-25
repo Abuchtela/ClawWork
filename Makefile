@@ -10,7 +10,7 @@
 #   make build          Build Docker image
 #   make clean          Remove build artifacts and logs
 
-.PHONY: setup start stop logs build up down clean help
+.PHONY: setup start stop run logs logs-backend logs-frontend build build-frontend up up-detach down clean clean-all help
 
 # ── Convenience shortcuts ──────────────────────────────────────────────────────
 
